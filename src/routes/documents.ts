@@ -180,7 +180,7 @@ export const documentRoutes: FastifyPluginAsync = async (fastify) => {
       );
 
       return {
-        files: result.rows.map((row) => ({
+        files: result.rows.map((row: any) => ({
           id: row.id,
           fileName: row.file_name,
           fileType: row.file_type,
