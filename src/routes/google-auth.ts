@@ -72,10 +72,10 @@ export const googleAuthRoutes: FastifyPluginAsync = async (fastify) => {
       client_id: config.GOOGLE_CLIENT_ID,
       redirect_uri: redirectUri,
       response_type: "code",
-      scope: "openid email profile",
+      scope: "openid email profile https://www.googleapis.com/auth/calendar.events",
       state,
       access_type: "offline",
-      prompt: "select_account",
+      prompt: "consent",
     });
 
     const consentUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
@@ -185,6 +185,28 @@ export const googleAuthRoutes: FastifyPluginAsync = async (fastify) => {
         [email, name, emailVerified ? new Date() : null]
       );
       user = inserted.rows[0];
+    }
+
+    // ── Persist Google tokens for Calendar access ──────────
+    const googleAccessToken = tokenData.access_token as string | undefined;
+    const googleRefreshToken = tokenData.refresh_token as string | undefined;
+    const expiresIn = tokenData.expires_in as number | undefined;
+    const grantedScope = tokenData.scope as string | undefined;
+
+    if (googleAccessToken && expiresIn) {
+      const tokenExpiresAt = new Date(Date.now() + expiresIn * 1000);
+      await db.query(
+        `INSERT INTO user_google_tokens (user_id, access_token, refresh_token, token_expires_at, scopes)
+         VALUES ($1, $2, $3, $4, $5)
+         ON CONFLICT (user_id)
+         DO UPDATE SET
+           access_token = EXCLUDED.access_token,
+           refresh_token = COALESCE(EXCLUDED.refresh_token, user_google_tokens.refresh_token),
+           token_expires_at = EXCLUDED.token_expires_at,
+           scopes = EXCLUDED.scopes,
+           updated_at = NOW()`,
+        [user.id, googleAccessToken, googleRefreshToken ?? null, tokenExpiresAt, grantedScope ?? ""]
+      );
     }
 
     // Issue session

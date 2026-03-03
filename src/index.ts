@@ -13,6 +13,7 @@ import { googleAuthRoutes } from "./routes/google-auth";
 import { dataRoutes } from "./routes/data";
 import { documentRoutes } from "./routes/documents";
 import { healthRoutes } from "./routes/health";
+import { calendarRoutes } from "./routes/calendar";
 import { realtimeRoutes } from "./routes/realtime";
 
 async function buildServer() {
@@ -49,6 +50,7 @@ async function buildServer() {
   await fastify.register(dataRoutes, { prefix: "/api/data" });
   await fastify.register(documentRoutes, { prefix: "/api/data/documents" });
   await fastify.register(realtimeRoutes, { prefix: "/api/realtime" });
+  await fastify.register(calendarRoutes, { prefix: "/api/calendar" });
 
   return fastify;
 }

@@ -56,7 +56,16 @@ const migrationStatements = [
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );`,
   `CREATE INDEX IF NOT EXISTS idx_user_documents_user_agent
-     ON user_documents(user_id, agent_id);`
+     ON user_documents(user_id, agent_id);`,
+  `CREATE TABLE IF NOT EXISTS user_google_tokens (
+      user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      access_token TEXT NOT NULL,
+      refresh_token TEXT,
+      token_expires_at TIMESTAMPTZ NOT NULL,
+      scopes TEXT NOT NULL DEFAULT '',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );`
 ] as const;
 
 export async function runMigrations(pool: Pool): Promise<void> {
